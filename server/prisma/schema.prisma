@@ -1,0 +1,167 @@
+// SOC Xpert — Fase 03 · Esquema de fundação (Sec4data)
+// Identidade, organizações, papéis, conectores por tenant e auditoria.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  ANALYST
+  VIEWER
+  AUDITOR
+}
+
+enum MemberStatus {
+  ACTIVE
+  INVITED
+}
+
+enum ConnectorType {
+  WAZUH
+  MISP
+  THEHIVE
+  OPNSENSE
+  VELOCIRAPTOR
+  MALCOLM
+  SURICATA
+  GRAYLOG
+  OPENCTI
+  ELASTIC
+  SYSLOG
+}
+
+/// Organização cliente. Unidade de isolamento multi-tenant.
+model Tenant {
+  id        String       @id @default(cuid())
+  name      String
+  slug      String       @unique
+  plan      String       @default("standard")
+  status    TenantStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  memberships Membership[]
+  connectors  ConnectorConfig[]
+  preferences UserPreference[]
+  auditLogs   AuditLog[]
+}
+
+/// Pessoa. Global à plataforma; pertence a um ou mais tenants via Membership.
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  name         String
+  avatarUrl    String?
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  memberships Membership[]
+  preferences UserPreference[]
+  sessions    Session[]
+  auditLogs   AuditLog[]
+}
+
+/// Liga User <-> Tenant com um papel (RBAC).
+model Membership {
+  id        String       @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      Role         @default(ANALYST)
+  status    MemberStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+  @@index([tenantId])
+}
+
+/// Configuração de um conector, por tenant. Credenciais SEMPRE cifradas.
+model ConnectorConfig {
+  id           String        @id @default(cuid())
+  tenantId     String
+  type         ConnectorType
+  name         String
+  baseUrl      String?
+  /// Blob JSON cifrado (AES-256-GCM) com as credenciais. Nunca em texto simples.
+  secretCipher String?
+  enabled      Boolean       @default(true)
+  meta         Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, type])
+  @@index([tenantId])
+}
+
+/// Personalização de consola por utilizador dentro de um tenant.
+model UserPreference {
+  id          String  @id @default(cuid())
+  userId      String
+  tenantId    String
+  theme       String  @default("dark")
+  density     String  @default("comfortable")
+  defaultView String  @default("dashboard")
+  data        Json?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+}
+
+/// Sessão de autenticação (usada a partir da sub-fase 03.2).
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  ip        String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Registo de auditoria — cidadão de primeira classe num produto de SOC.
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  target    String?
+  ip        String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([createdAt])
+}
