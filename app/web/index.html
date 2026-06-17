@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HIDEN · SEC4DATA — Threat Hunting · OSINT · CTI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <span class="logo" aria-label="HIDEN">
+    <svg viewBox="0 0 96 88" width="30" height="28" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6,44 Q48,8 90,44 Q48,80 6,44 Z" fill="none" stroke="#00E5FF" stroke-width="5"/>
+      <circle cx="48" cy="44" r="14" fill="#00E5FF"/><circle cx="48" cy="44" r="5.5" fill="#05080d"/>
+      <line x1="48" y1="2" x2="48" y2="12" stroke="#00E5FF" stroke-width="5"/>
+      <line x1="48" y1="76" x2="48" y2="86" stroke="#00E5FF" stroke-width="5"/>
+    </svg>
+  </span>
+  <span class="brand">HI<b>DEN</b><small>by SEC4DATA</small></span>
+  <span class="strip">AUTHORIZED USE · DEFENSIVE</span>
+  <span class="spacer"></span>
+  <span class="ver mono" id="ver">v—</span>
+  <span class="dot"></span><span class="clock mono" id="clock">--:--:--</span>
+</header>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="sec"><button class="btn" id="new-inv">+ New Investigation</button></div>
+    <div class="sec tight"><h3>Investigations</h3></div>
+    <div class="invlist" id="invlist"></div>
+    <div class="sec tight"><button class="btn ghost" id="open-humint">⛨ HUMINT · Case Management</button></div>
+  </aside>
+
+  <main class="work">
+    <div class="wtool" id="wtool" hidden>
+      <div>
+        <div class="name" id="w-name">—</div>
+        <div class="ref mono" id="w-ref"></div>
+      </div>
+      <span class="spacer"></span>
+      <div class="opbar">
+        <select id="op-mod" aria-label="Module">
+          <option value="domain">Domain</option>
+          <option value="ip">IP / Infra</option>
+          <option value="brand">Brand / Phishing</option>
+          <option value="breach">Org Breach</option>
+          <option value="cti">CTI · IOC</option>
+        </select>
+        <input type="text" id="op-target" placeholder="target (e.g. sec4data.ao)" />
+        <button class="btn sm" id="op-run">Run</button>
+        <button class="btn sm ghost" id="op-profile">Fake profile</button>
+        <button class="btn sm ghost" id="op-report">⬇ PDF report</button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid" hidden>
+      <div class="cell"><span class="lbl eyebrow">Correlation Graph</span><svg id="graph"></svg>
+        <div class="legend mono" id="legend"></div></div>
+      <div class="cell"><span class="lbl eyebrow">Infrastructure Map</span><div id="map"></div></div>
+      <div class="cell full"><span class="lbl eyebrow">Timeline</span><div id="timeline"></div></div>
+    </div>
+
+    <div class="empty" id="empty">
+      <svg viewBox="0 0 96 88" width="64" height="60" xmlns="http://www.w3.org/2000/svg" style="opacity:.85">
+        <path d="M6,44 Q48,8 90,44 Q48,80 6,44 Z" fill="none" stroke="#0a8aa0" stroke-width="4"/>
+        <circle cx="48" cy="44" r="13" fill="#0a8aa0"/><circle cx="48" cy="44" r="5" fill="#05080d"/>
+      </svg>
+      <div class="big">SELECT OR CREATE AN INVESTIGATION</div>
+      <div class="note">Maltego-style correlation graph · Infrastructure geolocation map · Forensic timeline<br>
+      Geolocates infrastructure (IPs, servers, phishing) — not people.</div>
+    </div>
+  </main>
+</div>
+
+<aside class="inspector" id="inspector"></aside>
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

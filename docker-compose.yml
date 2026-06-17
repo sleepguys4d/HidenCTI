@@ -1,0 +1,21 @@
+services:
+  hiden:
+    build: .
+    image: sec4data/hiden:3.0
+    container_name: hiden
+    ports:
+      - "8000:8000"
+    environment:
+      # Optional API keys (leave empty if a service is unused)
+      VT_API_KEY: "${VT_API_KEY:-}"
+      ABUSEIPDB_API_KEY: "${ABUSEIPDB_API_KEY:-}"
+      SHODAN_API_KEY: "${SHODAN_API_KEY:-}"
+      HIBP_API_KEY: "${HIBP_API_KEY:-}"
+    volumes:
+      - hiden_data:/srv/data        # investigations (graph/timeline)
+      - hiden_reports:/srv/reports  # forensic PDFs
+    restart: unless-stopped
+
+volumes:
+  hiden_data:
+  hiden_reports:
